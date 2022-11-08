@@ -1,0 +1,12 @@
+# harbor-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harbor-auth
+  namespace: TEMPLATE_NS
+  annotations:
+    tekton.dev/docker-0: https://harbor.xxx.com #通过注释关联指定的仓库
+type: kubernetes.io/basic-auth
+stringData:
+  username: username # 用户名
+  password: passwd # 密码s

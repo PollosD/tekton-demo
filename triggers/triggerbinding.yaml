@@ -1,0 +1,15 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: ClusterTriggerBinding
+metadata:
+  name: pipeline-bingding
+spec:
+  params:
+    - name: url
+      value: $(body.project.git_http_url)
+    - name: revision
+      value: $(body.ref)
+    - name: harborProject
+      value: $(body.project.namespace)
+    - name: project
+      value: $(body.project.name)
+    

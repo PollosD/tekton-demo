@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: docker-build-push-TEMPLATE-ENV
+  namespace: TEMPLATE-NS
+spec:
+  workspaces:
+    - name: ci-pvc
+      mountPath: /workspace/repo
+      description: This is the code working directory
+  params:
+    - name: imageTag
+      type: string  
+    - name: harborProject
+      type: string  
+    - name: harborUrl
+      type: string
+    - name: project
+      type: string
+  steps:
+    - name: docker-build-push
+      workingDir: /workspace/repo
+      image: docker:stable
+      script: |
+        #!/usr/bin/env sh
+        cd $(params.project)-TEMPLATE-ENV
+        docker login $(params.harborUrl)
+        docker build -f Dockerfile-$(params.project)-TEMPLATE-ENV . -t $(params.harborUrl)/$(params.harborProject)/$(params.project):$(params.imageTag)
+        docker push $(params.harborUrl)/$(params.harborProject)/$(params.project):$(params.imageTag)
+      volumeMounts:
+        - name: dockersock 
+          mountPath: /var/run/docker.sock
+  volumes:
+    - name: dockersock
+      hostPath:
+        path: /var/run/docker.sock 
+        
+  

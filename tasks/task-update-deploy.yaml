@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-deploy-image-TEMPLATE_ENV
+  namespace: TEMPLATE_NS
+spec:
+  workspaces:
+    - name: ci-pvc
+      mountPath: /workspace/repo
+      description: This is the code working directory   
+  params:
+    - name: imageTag
+      type: string  
+    - name: harborProject
+      type: string  
+    - name: harborUrl
+      type: string
+    - name: project
+      type: string
+  steps:
+    - name: clone-deploy-update-image
+      workingDir: /workspace/repo
+      image: centos:gityq
+      script: |
+        git config --global user.email "XXX@xxx.com"
+        git config --global user.name "xxx"
+        git clone http://gitlab.relaper.tech/dwang/cicd.git 
+        cd cicd/$(params.project)      
+        yq r $(params.project)-dev-deploy.yaml spec.template.spec.containers[*].image
+        echo $(params.harborUrl)/$(params.harborProject)/$(params.project):$(params.imageTag)
+        yq w --inplace $(params.project)-dev-deploy.yaml 'spec.template.spec.containers[*].image' "$(params.harborUrl)/$(params.harborProject)/$(params.project):$(params.imageTag)"       
+        git add $(params.project)-dev-deploy.yaml
+        git status
+        git commit -m "update image"
+        git push
+        cd ../.. && rm -rf cicd

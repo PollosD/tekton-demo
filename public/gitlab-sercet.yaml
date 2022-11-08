@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitlab-auth
+  namespace: TEMPLATE_NS
+  annotations:
+    tekton.dev/git-0: http://gitlab.xxx.com #通过注释关联指定的gitlab
+type: kubernetes.io/basic-auth
+stringData:
+  username: username # 用户名
+  password: passwd # 密码

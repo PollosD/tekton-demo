@@ -1,0 +1,129 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: TEMPLATE_ENV-pipeline-ci
+  namespace: TEMPLATE_NS
+spec:
+  params:
+  - name: url
+    type: string
+    description: The git repository URL to clone from.
+  - name: revision
+    type: string
+    description: The git branch to clone,ex.refs/heads/master.
+  - name: subdirectory
+    type: string
+  - name: refvision
+    description: The git branch to clone,ex.refs/heads/master.
+  - name: imageTag
+    description: docker image tag
+  - name: project
+    description: project name
+  - name: harborProject
+    description: harbor project name
+  - name: harborUrl
+    description: harbor test address
+
+  workspaces:
+  - name: ci-pvc
+
+  tasks:
+  - name: git-clone
+    taskRef:
+      name: git-clone
+      kind: ClusterTask
+    workspaces:
+    - name: output
+      workspace: ci-pvc
+    params:
+    - name: url
+      value: $(params.url)
+    - name: revision
+      value: $(params.revision)
+    - name: subdirectory
+      value: $(params.subdirectory)
+  
+  - name: package
+    taskRef:
+      name: mvn-package-dev
+    runAfter:
+      - git-clone
+    workspaces:
+    - name: ci-pvc
+      workspace: ci-pvc
+    params:
+    - name: project
+      value: $(params.project)
+  
+  - name: pull-dockerfile
+    taskRef:
+      name: pull-dockerfile-dev
+    runAfter:
+      - package
+    workspaces:
+    - name: ci-pvc
+      workspace: ci-pvc
+    params:
+    - name: project
+      value: $(params.project)
+  
+  - name: generate-build-id
+    taskRef:
+      name: generate-build-id
+      kind: ClusterTask
+    runAfter:
+      - pull-dockerfile
+    params:
+    - name: refvision
+      value: $(params.refvision)
+  
+  - name: docker
+    taskRef:
+      name: docker-build-push-dev
+    runAfter:
+      - generate-build-id
+    workspaces:
+    - name: ci-pvc
+      workspace: ci-pvc
+    params:
+    - name: imageTag
+      value: $(params.imageTag)
+    - name: project
+      value: $(params.project)
+    - name: harborProject
+      value: $(params.harborProject)
+    - name: harborUrl
+      value: $(params.harborUrl)
+  
+  - name: clean
+    taskRef:
+      name: mvn-clean-dev
+    runAfter:
+      - docker
+    workspaces:
+    - name: ci-pvc
+      workspace: ci-pvc
+    params:
+    - name: project
+      value: $(params.project)
+  
+  - name: update-deploy
+    taskRef:
+      name: update-deploy-image-dev
+    runAfter:
+      - docker
+    workspaces:
+    - name: ci-pvc
+      workspace: ci-pvc
+    params:
+    - name: imageTag
+      value: $(params.imageTag)
+    - name: project
+      value: $(params.project)
+    - name: harborProject
+      value: $(params.harborProject)
+    - name: harborUrl
+      value: $(params.harborUrl)
+    
+    
+    

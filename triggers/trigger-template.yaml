@@ -1,0 +1,57 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: TEMPLATE_ENV-ci-trigger-template
+  namespace: TEMPLATE_NS
+spec:
+  params:
+  - name: url
+    description: The git repository URL to clone from.
+  - name: revision
+    description: The git branch to clone,ex.refs/heads/master.
+  - name: subdirectory
+    description: project workspace
+  - name: refvision
+    description: The git branch to clone,ex.refs/heads/master.
+  - name: imageTag
+    description: docker image tag
+  - name: project
+    description: project name
+  - name: harborProject
+    description: harbor project name
+  - name: harborUrl
+    description: harbor test address
+    default: harbor-test.relaper.tech
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: $(tt.params.project)-dev-ci-run-$(uid)
+    spec:
+      serviceAccountName: ci-build-auth
+      pipelineRef:
+        name: TEMPLATE_ENV-pipeline-ci
+      workspaces:
+      - name: ci-pvc
+        persistentVolumeClaim:
+          claimName: ci-pvc 
+        subPath:          #此处填写PVC下面的目录主目录名
+      params:
+      - name: url
+        value: $(tt.params.url)
+      - name: revision
+        value: $(tt.params.revision)
+      - name: subdirectory
+        value: $(tt.params.project)-TEMPLATE_ENV   #此处是子目录名
+      - name: imageTag
+        value: $(tasks.generate-build-id.results.build-id)
+      - name: harborProject
+        value: $(tt.params.harborProject)
+      - name: harborUrl
+        value: harbor-test.relaper.tech
+      - name: refvision
+        value: $(tt.params.revision)
+      - name: project
+        value: $(tt.params.project)
+    
+      

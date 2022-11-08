@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ci-pvc
+  namespace: TEMPLATE_NS
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "course-nfs-storage"
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi

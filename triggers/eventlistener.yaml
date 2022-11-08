@@ -1,0 +1,35 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: dev-ci-eventlistener
+  namespace: TEMPLATE_NS
+spec:
+  serviceAccountName: ci-build-auth
+  triggers:
+  - name: gitlab-events-trigger
+    interceptors:
+    - name: "verify-gitlab-payload"
+      ref:
+        name: "gitlab"
+        kind: ClusterInterceptor
+      params:
+      - name: secretRef
+        value:
+          secretName: "ci-trigger-secret"
+          secretKey: "secretToken"
+      - name: eventTypes
+        value:
+          - "Push Hook"
+          - "Tag Push Hook"
+    - name: "matching branch"
+      ref: 
+        name: "cel"
+        kind: ClusterInterceptor
+      params:
+        - name: "filter"
+          value: "body.ref.contains('develop')"  #分支过滤器，也可以指定固定分支 body.ref == refs/heads/develop-1.0
+    bindings:
+    - ref: pipeline-bingding
+      kind: ClusterTriggerBinding
+    template:
+      ref: dev-ci-trigger-template

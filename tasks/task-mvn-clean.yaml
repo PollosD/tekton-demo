@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mvn-clean-TEMPLATE_ENV
+  namespace: TEMPLATE_NS
+spec:
+  workspaces:
+    - name: ci-pvc
+      mountPath: /workspace/repo
+      description: This is the code working directory   
+  params:
+    - name: project
+      type: string
+
+  steps:
+    - name: clean
+      workingDir: /workspace/repo
+      image: maven:3.8.6-openjdk-11
+      script: |
+        cd $(params.project)-TEMPLATE_ENV
+        mvn clean 
+        rm -rf Dockerfile*
+      volumeMounts:
+      - name: m2
+        mountPath: /root/.m2
+      - name: maven
+        mountPath: /usr/share/maven/conf/settings.xml
+  volumes:
+   - name: m2
+     hostPath:
+       path: /root/.m2
+   - name: maven
+     hostPath:
+       path: /root/.m2/settings.xml
+
+
+       

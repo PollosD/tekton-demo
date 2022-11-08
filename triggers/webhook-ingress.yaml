@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: el-ci-eventlistener-ingress
+  namespace: TEMPLATE_NS
+  annotations:
+    nginx.ingress.kubernetes.io/cors-allow-headers: DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization
+    nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS, DELETE
+    nginx.ingress.kubernetes.io/cors-allow-origin: '*'
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - webhook-gitlab.xxx.com
+    secretName:             #选填
+  rules:
+  - host: webhook-gitlab.xxx.com
+    http:
+      paths:
+      - path: /dev      
+        pathType: Prefix
+        backend:
+          service:
+            name: el-ci-eventlistener
+            port:
+              number: 8080
+status:
+  loadBalancer: {}   

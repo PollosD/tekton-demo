@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: pull-dockerfile-TEMPLATE_ENV
+  namespace: TEMPLATE-NS
+spec:
+  workspaces:
+    - name: ci-pvc
+      mountPath: /workspace/repo
+      description: This is the code working directory   
+  params:
+    - name: project
+      type: string
+  steps:
+    - name: pull-dockerfile
+      workingDir: /workspace/repo
+      image: busybox
+      script: |
+        cd $(params.project)-dev
+        wget http://minio.xxx.com/cicd/Dockerfile-$(params.project)-dev
+        

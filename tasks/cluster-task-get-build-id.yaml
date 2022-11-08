@@ -1,0 +1,45 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: generate-build-id
+spec:
+  description: >-
+    Given a base version, this task generates a unique build id by appending
+    the base-version to the current timestamp.
+  params:
+    - description: Base product version
+      name: refvision
+      type: string
+  results:
+    - name: timestamp
+      description: Current timestamp
+    - name: build-id
+      description: ID of the current build
+    - name: base-version
+      description: get base-version
+  steps:
+    - name: get-timestamp
+      image: harbor-test.relaper.tech/library/bash:5.0
+      script: |
+        #!/usr/bin/env bash
+        ts=`date "+%Y%m%d-%H%M%S"`
+        echo "Current Timestamp: ${ts}"
+        echo ${ts} | tr -d "\n" | tee $(results.timestamp.path)
+    - name: get-baseversion
+      image: harbor-test.relaper.tech/library/bash:5.0
+      script: |
+        #!/usr/bin/env bash
+        echo $(params.refvision)
+        ref="$(params.refvision)"
+        echo $ref
+        baseVersion="${ref#*heads/}"
+        echo "get base-version: ${baseVersion}"
+        echo ${baseVersion} | tr -d "\n" | tee $(results.base-version.path)
+    - name: get-buildid
+      image: harbor-test.relaper.tech/library/bash:5.0
+      script: |
+        #!/usr/bin/env bash
+        ts=`cat $(results.timestamp.path)`
+        bv=`cat $(results.base-version.path)`
+        buildId=${bv}-${ts}
+        echo ${buildId} | tr -d "\n" | tee $(results.build-id.path)

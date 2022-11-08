@@ -1,0 +1,33 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: dev-ci-run
+  namespace: TEMPLATE_NS
+spec:
+  serviceAccountName: ci-build-auth
+  pipelineRef:
+    name: dev-ci
+  workspaces:
+  - name: ci-pvc
+    persistentVolumeClaim:
+      claimName: ci-pvc
+    subPath: iot
+  params:
+  - name: url
+    value: 
+  - name: revision
+    value: 
+  - name: subdirectory
+    value: 
+  - name: imageTag
+    value: $(tasks.generate-build-id.results.build-id)
+  - name: imageProject
+    value: 
+  - name: harborProject
+    value: 
+  - name: harborUrl
+    value: 
+  - name: refvision
+    value: 
+
+    
